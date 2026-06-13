@@ -6,6 +6,6 @@ import kotlinx.coroutines.flow.Flow
 
 interface ProductRepository {
     suspend fun insertProduct(product: Product)
+    suspend fun removeProducts(products: List<Product>)
     fun getAllProducts(): Flow<List<Product>>
-    fun buyProducts(cart: List<Int>)
 }

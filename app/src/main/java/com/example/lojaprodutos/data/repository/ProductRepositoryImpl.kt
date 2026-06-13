@@ -16,13 +16,13 @@ class ProductRepositoryImpl(
         productDao.insert(product.toEntity())
     }
 
+    override suspend fun removeProducts(products: List<Product>) {
+        productDao.delete(products.map { it.toEntity() })
+    }
+
     override fun getAllProducts(): Flow<List<Product>> {
         return productDao.getAll().map { entities ->
             entities.map { it.toModel() }
         }
-    }
-
-    override fun buyProducts(cart: List<Int>) {
-        // Implementação futura
     }
 }

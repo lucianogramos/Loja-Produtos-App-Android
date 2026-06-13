@@ -28,6 +28,12 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 
+import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.AddShoppingCart
+import androidx.compose.material.icons.filled.ConfirmationNumber
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
+
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,16 +46,62 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProductListScreen(
     viewModel: ProductViewModel = viewModel(factory = ProductViewModel.Factory)
 ) {
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle()
     val products by viewModel.productListState.collectAsStateWithLifecycle()
+    val cart by viewModel.cart.collectAsStateWithLifecycle()
+    val appliedCoupon by viewModel.appliedCoupon.collectAsStateWithLifecycle()
+    val checkoutResult by viewModel.checkoutResult.collectAsStateWithLifecycle()
+    
     var showAddDialog by remember { mutableStateOf(false) }
+    var showAddCouponDialog by remember { mutableStateOf(false) }
+    var showApplyCouponDialog by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+
+    LaunchedEffect(checkoutResult) {
+        checkoutResult?.let { total ->
+            Toast.makeText(
+                context,
+                "Compra finalizada! Total pago: R$ ${String.format(Locale.getDefault(), "%.2f", total)}",
+                Toast.LENGTH_LONG
+            ).show()
+            viewModel.clearCheckoutResult()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text("Loja de Produtos") },
+                actions = {
+                    IconButton(onClick = { showApplyCouponDialog = true }) {
+                        Icon(
+                            imageVector = Icons.Default.ConfirmationNumber,
+                            contentDescription = "Aplicar Cupom",
+                            tint = if (appliedCoupon != null) Color(0xFF4CAF50) else LocalContentColor.current
+                        )
+                    }
+                    BadgedBox(
+                        badge = {
+                            if (cart.isNotEmpty()) {
+                                Badge { Text(cart.size.toString()) }
+                            }
+                        },
+                        modifier = Modifier.padding(end = 16.dp)
+                    ) {
+                        IconButton(onClick = { viewModel.checkout() }) {
+                            Icon(Icons.Default.ShoppingCart, contentDescription = "Comprar")
+                        }
+                    }
+                }
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
@@ -74,7 +126,10 @@ fun ProductListScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(products) { product ->
-                    ProductCard(product)
+                    ProductCard(
+                        product = product,
+                        onAddToCart = { viewModel.addToCart(product) }
+                    )
                 }
             }
         }
@@ -89,6 +144,122 @@ fun ProductListScreen(
             }
         )
     }
+
+    if (showApplyCouponDialog) {
+        ApplyCouponDialog(
+            onDismiss = { showApplyCouponDialog = false },
+            onApply = { code ->
+                viewModel.applyCoupon(code)
+                showApplyCouponDialog = false
+            },
+            onCreateNew = {
+                showApplyCouponDialog = false
+                showAddCouponDialog = true
+            }
+        )
+    }
+
+    if (showAddCouponDialog) {
+        AddCouponDialog(
+            onDismiss = { showAddCouponDialog = false },
+            onConfirm = { code, tax ->
+                viewModel.addCoupon(code, tax)
+                showAddCouponDialog = false
+            }
+        )
+    }
+}
+
+@Composable
+fun ApplyCouponDialog(
+    onDismiss: () -> Unit,
+    onApply: (String) -> Unit,
+    onCreateNew: () -> Unit
+) {
+    var code by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Aplicar Cupom") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it },
+                    label = { Text("Código do Cupom") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                TextButton(
+                    onClick = onCreateNew,
+                    modifier = Modifier.align(Alignment.End)
+                ) {
+                    Text("Criar novo cupom")
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = { onApply(code) },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+            ) {
+                Text("Aplicar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+fun AddCouponDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String, Double) -> Unit
+) {
+    var code by remember { mutableStateOf("") }
+    var tax by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Novo Cupom") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it },
+                    label = { Text("Código") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = tax,
+                    onValueChange = { tax = it },
+                    label = { Text("Desconto (%)") },
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val taxDouble = tax.toDoubleOrNull() ?: 0.0
+                    if (code.isNotBlank()) {
+                        onConfirm(code, taxDouble)
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF6200EE))
+            ) {
+                Text("Criar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
 }
 
 @Composable
@@ -164,7 +335,10 @@ fun SearchBarField(query: String, onQueryChange: (String) -> Unit) {
 }
 
 @Composable
-fun ProductCard(product: Product) {
+fun ProductCard(
+    product: Product,
+    onAddToCart: () -> Unit
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(12.dp),
@@ -185,7 +359,7 @@ fun ProductCard(product: Product) {
 
             Spacer(modifier = Modifier.width(16.dp))
 
-            Column {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = product.name,
                     style = MaterialTheme.typography.titleMedium,
@@ -197,6 +371,14 @@ fun ProductCard(product: Product) {
                     style = MaterialTheme.typography.bodyLarge,
                     color = Color(0xFF6200EE),
                     fontWeight = FontWeight.SemiBold
+                )
+            }
+
+            IconButton(onClick = onAddToCart) {
+                Icon(
+                    imageVector = Icons.Default.AddShoppingCart,
+                    contentDescription = "Adicionar ao carrinho",
+                    tint = Color(0xFF6200EE)
                 )
             }
         }
