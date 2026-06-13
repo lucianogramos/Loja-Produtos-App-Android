@@ -1,7 +1,9 @@
 package com.example.lojaprodutos.di
 
 import android.content.Context
+import com.example.lojaprodutos.data.repository.ProductRepositoryImpl
 import com.example.lojaprodutos.data.source.local.MyDatabase
+import com.example.lojaprodutos.domain.usecase.AddProductUseCase
 import com.example.lojaprodutos.domain.usecase.BuyProductsUseCase
 import com.example.lojaprodutos.domain.usecase.GetAllProductsUseCase
 
@@ -13,13 +15,20 @@ class AppContainer(context: Context) {
     private val productDao = database.getProductDao()
 
     // Repositories
-    val productRepository by lazy {  }
+    val productRepository by lazy {
+        ProductRepositoryImpl(productDao)
+    }
 
     // Use Cases
-    val GetAllProductsUseCase by lazy {
+    val getAllProductsUseCase by lazy {
         GetAllProductsUseCase(productRepository)
     }
-    val BuyProductsUseCase by lazy {
+
+    val addProductUseCase by lazy {
+        AddProductUseCase(productRepository)
+    }
+
+    val buyProductsUseCase by lazy {
         BuyProductsUseCase(productRepository)
     }
 }

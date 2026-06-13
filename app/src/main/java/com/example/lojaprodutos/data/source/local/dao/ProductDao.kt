@@ -6,11 +6,13 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import com.example.lojaprodutos.data.source.local.entity.ProductEntity
 
+import kotlinx.coroutines.flow.Flow
+
 @Dao
 interface ProductDao {
     @Insert(onConflict = OnConflictStrategy.IGNORE)
-    fun insert(product: ProductEntity): Unit
+    suspend fun insert(product: ProductEntity)
 
     @Query("SELECT * FROM products")
-    fun getAll(): List<ProductEntity>
+    fun getAll(): Flow<List<ProductEntity>>
 }

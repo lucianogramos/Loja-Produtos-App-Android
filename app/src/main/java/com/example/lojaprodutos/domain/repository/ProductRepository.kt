@@ -2,8 +2,10 @@ package com.example.lojaprodutos.domain.repository
 
 import com.example.lojaprodutos.domain.model.Product
 
+import kotlinx.coroutines.flow.Flow
+
 interface ProductRepository {
-    fun insertProduct(product: Product): Unit
-    fun getAllProducts(): List<Product>
-    fun buyProducts(cart: List<Int>): Unit
+    suspend fun insertProduct(product: Product)
+    fun getAllProducts(): Flow<List<Product>>
+    fun buyProducts(cart: List<Int>)
 }

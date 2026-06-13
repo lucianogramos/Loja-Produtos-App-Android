@@ -3,12 +3,10 @@ package com.example.lojaprodutos.domain.usecase
 import com.example.lojaprodutos.domain.model.Product
 import com.example.lojaprodutos.domain.repository.ProductRepository
 
-import kotlinx.coroutines.flow.Flow
-
-class GetAllProductsUseCase(
+class AddProductUseCase(
     private val productRepository: ProductRepository
 ) {
-    operator fun invoke(): Flow<List<Product>> {
-        return productRepository.getAllProducts()
+    suspend operator fun invoke(product: Product) {
+        productRepository.insertProduct(product)
     }
 }
