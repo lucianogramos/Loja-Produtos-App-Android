@@ -1,3 +1,3 @@
 ## Licença e Créditos
 
-Este software é um código aberto licenciado sob a [MIT License](LICENSE).
+Este é um software de código aberto licenciado sob a [MIT License](LICENSE).
