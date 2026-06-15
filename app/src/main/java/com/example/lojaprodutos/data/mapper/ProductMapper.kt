@@ -1,7 +1,6 @@
 package com.example.lojaprodutos.data.mapper
 
 import com.example.lojaprodutos.data.source.local.entity.ProductEntity
-import com.example.lojaprodutos.data.source.remote.dto.ProductDto
 import com.example.lojaprodutos.domain.model.Product
 
 fun Product.toEntity(): ProductEntity {

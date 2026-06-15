@@ -2,7 +2,7 @@ package com.example.lojaprodutos.domain.usecase
 
 import com.example.lojaprodutos.domain.model.Cart
 import com.example.lojaprodutos.domain.repository.ProductRepository
-import com.example.lojaprodutos.domain.services.DiscountService
+import com.example.lojaprodutos.domain.service.DiscountService
 
 class BuyProductsUseCase(
     private val productRepository: ProductRepository,

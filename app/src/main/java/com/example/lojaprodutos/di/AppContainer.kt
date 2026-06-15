@@ -4,7 +4,7 @@ import android.content.Context
 import com.example.lojaprodutos.data.repository.CouponRepositoryImpl
 import com.example.lojaprodutos.data.repository.ProductRepositoryImpl
 import com.example.lojaprodutos.data.source.local.MyDatabase
-import com.example.lojaprodutos.domain.services.DiscountService
+import com.example.lojaprodutos.domain.service.DiscountService
 import com.example.lojaprodutos.domain.usecase.AddCouponUseCase
 import com.example.lojaprodutos.domain.usecase.AddProductUseCase
 import com.example.lojaprodutos.domain.usecase.BuyProductsUseCase
